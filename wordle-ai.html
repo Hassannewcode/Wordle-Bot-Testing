@@ -1,143 +1,14 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wordle AI Terminal</title>
-  <style>
-    body {
-      background: black;
-      color: #00ff00;
-      font-family: 'Courier New', Courier, monospace;
-      padding: 20px;
-    }
-
-    #terminal {
-      white-space: pre-wrap;
-      margin-bottom: 10px;
-      max-height: 80vh;
-      overflow-y: auto;
-    }
-
-    input {
-      background: black;
-      color: #00ff00;
-      border: none;
-      font-family: inherit;
-      font-size: 1em;
-      outline: none;
-      width: 100%;
-    }
-
-    button {
-      background: #111;
-      color: #00ff00;
-      border: 1px solid #00ff00;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 1em;
-      padding: 5px 10px;
-      cursor: pointer;
-      margin-top: 10px;
-      width: 100%;
-    }
-
-    button:hover {
-      background: #00ff00;
-      color: black;
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div id="terminal"></div>
   <input type="text" id="input" autofocus placeholder="Press Enter after feedback (e.g. GYBBG)" />
   <button id="resetBtn">Reset</button>
-
-  <script>
-    const terminal = document.getElementById("terminal");
-    const input = document.getElementById("input");
-    const resetBtn = document.getElementById("resetBtn");
-
-    let wordList = [];
-    let possibleWords = [];
-    let currentGuess = "";
-
-    fetch('https://raw.githubusercontent.com/tabatkins/wordle-list/main/words')
-      .then(res => res.text())
-      .then(text => {
-        wordList = text.split("\n").filter(word => word.length === 5);
-        possibleWords = [...wordList];
-        suggestNext();
-      });
-
-    function print(text) {
-      terminal.textContent += text + "\n";
-      terminal.scrollTop = terminal.scrollHeight;
-    }
-
-    function scoreWords(words) {
-      const freq = {};
-      for (let word of words) {
-        let unique = new Set(word);
-        for (let ch of unique) {
-          freq[ch] = (freq[ch] || 0) + 1;
-        }
-      }
-      return words.sort((a, b) => {
-        const score = w => [...new Set(w)].reduce((sum, l) => sum + (freq[l] || 0), 0);
-        return score(b) - score(a);
-      });
-    }
-
-    function updatePossibleWords(guess, result) {
-      possibleWords = possibleWords.filter(word => {
-        for (let i = 0; i < 5; i++) {
-          const g = guess[i], r = result[i], w = word[i];
-          if (r === 'G' && g !== w) return false;
-          if (r === 'Y' && (g === w || !word.includes(g))) return false;
-          if (r === 'B') {
-            const guessCount = guess.split('').filter(c => c === g).length;
-            const wordCount = word.split('').filter(c => c === g).length;
-            const required = result.split('').filter((r, i2) => guess[i2] === g && r !== 'B').length;
-            if (word.includes(g) && wordCount > required) return false;
-          }
-        }
-        return true;
-      });
-    }
-
-    function suggestNext() {
-      const ranked = scoreWords(possibleWords);
-      currentGuess = ranked[0] || "?????";
-      print(`🧠 Try this guess: ${currentGuess.toUpperCase()}`);
-      print(`Type feedback (e.g. GYBBG) and press Enter:\n`);
-    }
-
-    input.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        const feedback = input.value.trim().toUpperCase();
-        input.value = "";
-
-        if (feedback.length !== 5 || !/^[GYB]+$/.test(feedback)) {
-          print("❌ Invalid result format. Use only G, Y, B.");
-          return;
-        }
-
-        print(`> Feedback: ${feedback}`);
-        updatePossibleWords(currentGuess, feedback);
-        if (feedback === "GGGGG") {
-          print("🎉 Solved! Word was: " + currentGuess.toUpperCase());
-        } else {
-          suggestNext();
-        }
-      }
-    });
-
-    resetBtn.addEventListener("click", () => {
-      possibleWords = [...wordList];
-      terminal.textContent = "";
-      print("🔄 Bot reset.\n");
-      suggestNext();
-    });
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
